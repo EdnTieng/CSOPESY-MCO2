@@ -1,9 +1,10 @@
 ﻿  Config.cpp
   ConsoleManager.cpp
-C:\Users\edn\source\repos\CSOPESY-MCO2\CSOPESY-MCO2\ConsoleManager.cpp(106,25): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\edn\source\repos\CSOPESY-MCO2\CSOPESY-MCO2\ConsoleManager.cpp(152,25): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\edn\Documents\GitHub\CSOPESY-MCO2\CSOPESY-MCO2\ConsoleManager.cpp(106,25): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\edn\Documents\GitHub\CSOPESY-MCO2\CSOPESY-MCO2\ConsoleManager.cpp(152,25): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
   CSOPESY-MCO2.cpp
   FCFS.cpp
   header.cpp
   Generating Code...
-  CSOPESY-MCO2.vcxproj -> C:\Users\edn\source\repos\CSOPESY-MCO2\x64\Debug\CSOPESY-MCO2.exe
+  LINK : C:\Users\edn\Documents\GitHub\CSOPESY-MCO2\x64\Debug\CSOPESY-MCO2.exe not found or not built by the last incremental link; performing full link
+  CSOPESY-MCO2.vcxproj -> C:\Users\edn\Documents\GitHub\CSOPESY-MCO2\x64\Debug\CSOPESY-MCO2.exe
