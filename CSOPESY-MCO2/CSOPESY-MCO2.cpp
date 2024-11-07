@@ -61,16 +61,28 @@ int main() {
                     else if (key == "delay_per_exec") {
                         configFile >> delay_per_exec;
                     }
+                    else if (key == "max_overall_mem") {
+                        configFile >> max_overall_mem;
+                    }
+                    else if (key == "mem_per_frame") {
+                        configFile >> mem_per_frame;
+                    }
+                    else if (key == "min_mem_per_proc") {
+                        configFile >> min_mem_per_proc;
+                    }
+                    else if (key == "max_mem_per_proc") {
+                        configFile >> max_mem_per_proc;
+                    }
                     else {
                         cout << "Unknown configuration key: " << key << "\n";
                     }
                 }
                 configFile.close();
                 assignConfig(num_cpu, sched, quant_cycles, batch_process_freq, min_ins, max_ins, delay_per_exec);
-                initialized = true;
-
-                // Initialize FCFS_Scheduler with config values
-
+                assignConfig2(max_overall_mem, mem_per_frame, min_mem_per_proc, max_mem_per_proc);
+                initialized = true;                                                                              
+                
+                // Initialize FCFS_Scheduler with config values                                                  
                 scheduler = new FCFS_Scheduler(num_cpu, &consoleManager);
                 scheduler->start();
 
