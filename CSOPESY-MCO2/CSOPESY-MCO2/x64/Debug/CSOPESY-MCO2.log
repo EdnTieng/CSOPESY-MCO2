@@ -1,0 +1,15 @@
+﻿ConsoleManager.obj : error LNK2001: unresolved external symbol "int num_cpu" (?num_cpu@@3HA)
+CSOPESY-MCO2.obj : error LNK2001: unresolved external symbol "int num_cpu" (?num_cpu@@3HA)
+CSOPESY-MCO2.obj : error LNK2019: unresolved external symbol "public: __cdecl FCFS_Scheduler::FCFS_Scheduler(int,class ConsoleManager *)" (??0FCFS_Scheduler@@QEAA@HPEAVConsoleManager@@@Z) referenced in function main
+CSOPESY-MCO2.obj : error LNK2019: unresolved external symbol "public: void __cdecl FCFS_Scheduler::start(void)" (?start@FCFS_Scheduler@@QEAAXXZ) referenced in function main
+CSOPESY-MCO2.obj : error LNK2019: unresolved external symbol "public: void __cdecl FCFS_Scheduler::schedulingTestStart(bool)" (?schedulingTestStart@FCFS_Scheduler@@QEAAX_N@Z) referenced in function main
+CSOPESY-MCO2.obj : error LNK2019: unresolved external symbol "public: void __cdecl FCFS_Scheduler::stop(void)" (?stop@FCFS_Scheduler@@QEAAXXZ) referenced in function main
+CSOPESY-MCO2.obj : error LNK2019: unresolved external symbol "public: void __cdecl FCFS_Scheduler::addToQueue(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> >)" (?addToQueue@FCFS_Scheduler@@QEAAXV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z) referenced in function main
+CSOPESY-MCO2.obj : error LNK2019: unresolved external symbol "void __cdecl assignConfig(int,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> >,int,int,int,int,int)" (?assignConfig@@YAXHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@HHHHH@Z) referenced in function main
+CSOPESY-MCO2.obj : error LNK2001: unresolved external symbol "class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > sched" (?sched@@3V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@A)
+CSOPESY-MCO2.obj : error LNK2001: unresolved external symbol "int quant_cycles" (?quant_cycles@@3HA)
+CSOPESY-MCO2.obj : error LNK2001: unresolved external symbol "int batch_process_freq" (?batch_process_freq@@3HA)
+CSOPESY-MCO2.obj : error LNK2001: unresolved external symbol "int max_ins" (?max_ins@@3HA)
+CSOPESY-MCO2.obj : error LNK2001: unresolved external symbol "int min_ins" (?min_ins@@3HA)
+CSOPESY-MCO2.obj : error LNK2001: unresolved external symbol "int delay_per_exec" (?delay_per_exec@@3HA)
+C:\Users\edn\source\repos\CSOPESY-MCO2\CSOPESY-MCO2\x64\Debug\CSOPESY-MCO2.exe : fatal error LNK1120: 13 unresolved externals
