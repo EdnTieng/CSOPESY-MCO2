@@ -13,13 +13,14 @@ struct ProcessInfo {
     std::string timestamp;  // Start timestamp
     int progress;           // Progress percentage (0-100)
     int num_ins;
+    int mem_allocated;
 };
 
 // ConsoleManager class to manage and display process information
 class ConsoleManager {
 public:
     // Adds a new process with its name, status, core ID, timestamp, and initial progress
-    void addProcess(const std::string& process_name, const std::string& status, int coreId, const std::string& timestamp, int progress, int num_ins);
+    void addProcess(const std::string& process_name, const std::string& status, int coreId, const std::string& timestamp, int progress, int num_ins, int mem_allocated);
 
     // Updates the status and progress of an existing process
     void updateProcessStatus(const std::string& process_name, const std::string& status, int progress);
@@ -33,7 +34,12 @@ public:
     // Removes a process from the list by name
     void removeProcess(const std::string& process_name);
 
+    //report-util
     void printProcesses() const;
+
+    //memory stamp
+    void printMemoryStamp(int qq, int maxOverallMem, int currentMemoryUsage) const;
+
 private:
     std::vector<ProcessInfo> processes; // Vector to store all processes
 };

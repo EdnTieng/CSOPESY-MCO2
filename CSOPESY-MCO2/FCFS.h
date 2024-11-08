@@ -30,6 +30,7 @@ public:
     bool dummy;
     int total_ins = 0;   // Total instructions for the process
     int current_ins = 0; // Track executed instructions for RR
+    int mem_allocated = 0;
     string name;
 
     Process(int pid) : id(pid), dummy(true) {}
@@ -47,6 +48,7 @@ public:
 
 private:
     int coreCount;
+    int currentMemoryUsage = 0;
     atomic<bool> running;
     atomic<bool> testRunning;
     vector<thread> cpuWorkers;
