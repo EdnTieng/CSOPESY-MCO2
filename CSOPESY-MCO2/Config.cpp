@@ -33,8 +33,4 @@ void assignConfig2(int max_overall_mem_val, int mem_per_frame_val, int min_mem_p
     ::min_mem_per_proc = min_mem_per_proc_val;
     ::max_mem_per_proc = max_mem_per_proc_val;
 
-    cout << "max_overall_mem: " << max_overall_mem << "\n";
-    cout << "mem_per_frame: " << mem_per_frame << "\n";
-    cout << "min_mem_per_proc: " << min_mem_per_proc << "\n";
-    cout << "max_mem_per_proc: " << max_mem_per_proc <<"\n";
 }

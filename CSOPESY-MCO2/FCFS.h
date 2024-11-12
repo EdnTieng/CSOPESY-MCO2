@@ -31,10 +31,11 @@ public:
     int total_ins = 0;   // Total instructions for the process
     int current_ins = 0; // Track executed instructions for RR
     int mem_allocated = 0;
+    bool in_mem;
     string name;
 
-    Process(int pid) : id(pid), dummy(true) {}
-    Process(string name) : name(name), dummy(false) {}
+    Process(int pid,int mem_aloc) : id(pid), mem_allocated(mem_aloc), dummy(true), in_mem(false) {}
+    Process(string name, int mem_aloc) : name(name), mem_allocated(mem_aloc), dummy(false), in_mem(false) {}
 };
 
 class FCFS_Scheduler {

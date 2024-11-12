@@ -14,16 +14,17 @@ struct ProcessInfo {
     int progress;           // Progress percentage (0-100)
     int num_ins;
     int mem_allocated;
+    bool in_mem;
 };
 
 // ConsoleManager class to manage and display process information
 class ConsoleManager {
 public:
     // Adds a new process with its name, status, core ID, timestamp, and initial progress
-    void addProcess(const std::string& process_name, const std::string& status, int coreId, const std::string& timestamp, int progress, int num_ins, int mem_allocated);
+    void addProcess(const std::string& process_name, const std::string& status, int coreId, const std::string& timestamp, int progress, int num_ins, int mem_allocated, bool in_mem);
 
     // Updates the status and progress of an existing process
-    void updateProcessStatus(const std::string& process_name, const std::string& status, int progress);
+    void updateProcessStatus(const std::string& process_name, const std::string& status, int progress, bool in_mem);
 
     // Lists all processes, displaying both "Running" and "Finished" processes
     void listProcesses() const;

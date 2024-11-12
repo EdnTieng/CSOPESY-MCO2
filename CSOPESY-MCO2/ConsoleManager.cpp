@@ -12,7 +12,7 @@
 using namespace std;
 
 // Adds a new process to the ConsoleManager with its initial status, core ID, timestamp, and progress
-void ConsoleManager::addProcess(const std::string& name, const std::string& status, int coreId, const std::string& timestamp, int progress, int num_ins, int mem_allocated) {
+void ConsoleManager::addProcess(const std::string& name, const std::string& status, int coreId, const std::string& timestamp, int progress, int num_ins, int mem_allocated, bool in_mem) {
     for (auto& process : processes) {
         if (process.name == name) {
             // If the process already exists, just update its fields
@@ -22,11 +22,12 @@ void ConsoleManager::addProcess(const std::string& name, const std::string& stat
             process.progress = progress;
             process.num_ins = num_ins;
             process.mem_allocated = mem_allocated;
+            process.in_mem = in_mem;
             return; // Exit once the process is found and updated
         }
     }
     // If it doesn't exist, create a new one
-    processes.push_back({ name, status, coreId, timestamp, progress, num_ins, mem_allocated});
+    processes.push_back({ name, status, coreId, timestamp, progress, num_ins, mem_allocated, in_mem});
 }
 
 
@@ -83,11 +84,12 @@ void ConsoleManager::removeProcess(const std::string& process_name) {
 }
 
 // Updates the status and progress of a process
-void ConsoleManager::updateProcessStatus(const std::string& process_name, const std::string& status, int progress) {
+void ConsoleManager::updateProcessStatus(const std::string& process_name, const std::string& status, int progress, bool in_mem) {
     for (auto& process : processes) {
         if (process.name == process_name) {
             process.status = status;
             process.progress = progress;
+            process.in_mem = in_mem;
             return;
         }
     }
@@ -206,7 +208,7 @@ void ConsoleManager::printMemoryStamp(int qq, int maxOverallMem, int currentMemo
     // Count the number of processes in memory (those with "Running" status)
     int processesInMemory = 0;
     for (const auto& process : processes) {
-        if (process.status == "Running") {
+        if (process.in_mem == true && process.status != "Finished") {
             ++processesInMemory;
         }
     }
@@ -221,12 +223,12 @@ void ConsoleManager::printMemoryStamp(int qq, int maxOverallMem, int currentMemo
 
     outFile << "----end---- = " << maxOverallMem << "\n";
     for (const auto& process : processes) {
-        if (process.status == "Running") {
+        if (process.in_mem == true && process.status != "Finished") {
             outFile << top_mem <<"\n";
             outFile << process.name <<"\n";
             bot_mem = top_mem - process.mem_allocated;
             outFile << bot_mem <<"\n";
-            top_mem = bot_mem - process.mem_allocated;
+            top_mem = bot_mem;
         }
     }
     outFile << "----start---- = 0\n";

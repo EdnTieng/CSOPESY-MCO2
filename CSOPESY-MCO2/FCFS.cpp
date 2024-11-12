@@ -46,7 +46,7 @@ void FCFS_Scheduler::schedulingTestStart(bool run) {
                 // Create and enqueue a new process
                 {
                     std::lock_guard<std::mutex> lock(queueMutex);
-                    processQueue.push(new Process(processId++));
+                    processQueue.push(new Process(processId++,max_mem_per_proc));
                 }
 
                 // Notify worker threads about the new process
@@ -118,7 +118,7 @@ void FCFS_Scheduler::cpuWorker(int coreId) {
     int qq = 0;
     while (true) {
         Process* process = nullptr;
-        
+
         {
             std::unique_lock<std::mutex> lock(queueMutex);
 
@@ -129,17 +129,20 @@ void FCFS_Scheduler::cpuWorker(int coreId) {
 
             if (!running && processQueue.empty()) break;
 
-            // Check if enough memory is available
             if (!processQueue.empty() && coreAvailable[coreId]) {
                 Process* nextProcess = processQueue.front();
-
-                if (currentMemoryUsage + max_mem_per_proc <= max_overall_mem) {
-                    // Memory is available; assign process to core
+                
+                // Check if memory is available for the next process
+                if (currentMemoryUsage + max_mem_per_proc <= max_overall_mem+1 || nextProcess->in_mem == true) {
+                    // Assign process to core and allocate memory
+                    if (nextProcess->in_mem == false)
+                    {
+                        currentMemoryUsage = currentMemoryUsage + max_mem_per_proc;
+                        nextProcess->in_mem = true;
+                    }
                     process = nextProcess;
                     processQueue.pop();
-                    cv.notify_all(); // Notify other threads
-                    currentMemoryUsage += max_mem_per_proc;
-
+                    
                     coreAvailable[coreId] = false;
                     coreAssignments[coreId] = process;
 
@@ -148,10 +151,7 @@ void FCFS_Scheduler::cpuWorker(int coreId) {
                         process->total_ins = dist(gen);
                     }
 
-                    process->mem_allocated = max_mem_per_proc; //placeholder till im forced to do rand
-
-
-                    // Generate timestamp for new process
+                    // Timestamp for new process
                     auto now = std::time(nullptr);
                     struct tm local_time;
                     localtime_s(&local_time, &now);
@@ -160,50 +160,50 @@ void FCFS_Scheduler::cpuWorker(int coreId) {
                     std::string timestamp = oss.str();
 
                     if (process->dummy) {
-                        consoleManager->addProcess("P" + std::to_string(process->id), "Running", coreId, timestamp, process->current_ins, process->total_ins, process->mem_allocated);
+                        consoleManager->addProcess("P" + std::to_string(process->id), "Running", coreId, timestamp, process->current_ins, process->total_ins, process->mem_allocated, true);
                     }
                     else {
-                        consoleManager->addProcess(process->name, "Running", coreId, timestamp, process->current_ins, process->total_ins, process->mem_allocated);
+                        consoleManager->addProcess(process->name, "Running", coreId, timestamp, process->current_ins, process->total_ins, process->mem_allocated, true);
                     }
                 }
                 else {
-                    // Insufficient memory; send process back to the queue tail
-                    cout << "mem gone";
+                    // Not enough memory; send process back to the queue tail
                     processQueue.push(processQueue.front());
                     processQueue.pop();
                 }
             }
         }
 
-        // Process execution
+        // Execute the assigned process
         if (process) {
             int instructions_to_execute = (algorithm == RR) ? std::min(quant_cycles, process->total_ins - process->current_ins) : process->total_ins;
+
             for (int i = 0; i < instructions_to_execute; ++i) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(delay_per_exec * 10));
-
-                qq++; //increment qq
+                qq++; // Increment qq
                 process->current_ins++;
                 
-                
+                // Log memory status after each instruction execution
+                consoleManager->printMemoryStamp(qq, max_overall_mem, currentMemoryUsage);
 
                 if (process->dummy) {
-                    consoleManager->updateProcessStatus("P" + std::to_string(process->id), "Running", process->current_ins);
+                    consoleManager->updateProcessStatus("P" + std::to_string(process->id), "Running", process->current_ins, true);
                 }
                 else {
-                    consoleManager->updateProcessStatus(process->name, "Running", process->current_ins);
+                    consoleManager->updateProcessStatus(process->name, "Running", process->current_ins, true);
                 }
             }
-                consoleManager->printMemoryStamp(qq, max_overall_mem, currentMemoryUsage);
+
             {
                 std::lock_guard<std::mutex> lock(queueMutex);
 
-                // Release memory if process is finished
+                // Release memory if the process is finished
                 if (process->current_ins >= process->total_ins) {
                     if (process->dummy) {
-                        consoleManager->updateProcessStatus("P" + std::to_string(process->id), "Finished", process->total_ins);
+                        consoleManager->updateProcessStatus("P" + std::to_string(process->id), "Finished", process->total_ins, false);
                     }
                     else {
-                        consoleManager->updateProcessStatus(process->name, "Finished", process->total_ins);
+                        consoleManager->updateProcessStatus(process->name, "Finished", process->total_ins, false);
                     }
                     delete process;
                     currentMemoryUsage -= max_mem_per_proc;
@@ -211,21 +211,19 @@ void FCFS_Scheduler::cpuWorker(int coreId) {
                     coreAssignments.erase(coreId);
                 }
                 else if (algorithm == RR) {
-                    // Round Robin: re-queue if unfinished
+                    // Round Robin: Re-queue if the process has remaining instructions
                     if (process->dummy) {
-                        consoleManager->updateProcessStatus("P" + std::to_string(process->id), "Waiting", process->current_ins);
+                        consoleManager->updateProcessStatus("P" + std::to_string(process->id), "Waiting", process->current_ins, true);
                     }
                     else {
-                        consoleManager->updateProcessStatus(process->name, "Waiting", process->current_ins);
+                        consoleManager->updateProcessStatus(process->name, "Waiting", process->current_ins, true);
                     }
-                    currentMemoryUsage -= max_mem_per_proc;;
+
                     processQueue.push(process);
                     coreAvailable[coreId] = true;
                     coreAssignments.erase(coreId);
                     cv.notify_all(); // Notify other threads
                 }
-
-                
             }
         }
     }
@@ -233,10 +231,11 @@ void FCFS_Scheduler::cpuWorker(int coreId) {
 
 
 
+
 void FCFS_Scheduler::addToQueue(string name) {
     {
         std::lock_guard<std::mutex> lock(queueMutex);
-        processQueue.push(new Process(name));
+        processQueue.push(new Process(name, max_mem_per_proc));
     }
     cv.notify_all();
 }
