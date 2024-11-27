@@ -234,3 +234,78 @@ void ConsoleManager::printMemoryStamp(int qq, int maxOverallMem, int currentMemo
     outFile << "----start---- = 0\n";
     outFile.close();  // Close the file
 }
+
+void ConsoleManager::process_smi() const
+{
+    system("cls");
+    set<int> coresInUse;
+    int total_mem_usage = 0;
+    for (const auto& process : processes) {
+        if (process.in_mem == true && process.status != "Finished") {
+            total_mem_usage = total_mem_usage + process.mem_allocated;
+        }
+        if (process.status == "Running") {
+            coresInUse.insert(process.coreId);
+        }
+    }
+    int coresInUseCount = coresInUse.size();
+    double coreUsagePercentage = (static_cast<double>(coresInUseCount) / num_cpu) * 100;
+    double memUsagePercentage = (total_mem_usage / max_overall_mem) * 100;
+
+    cout << "---------------------------------------------------------\n";
+    cout << "Process-smi 1.0 Driver Version 1.0\n";
+    cout << "---------------------------------------------------------\n";
+    cout << "CPU Util: " << coreUsagePercentage << "%\n";
+    cout << "Memory Usage: " << total_mem_usage << "/" << max_overall_mem <<"\n";
+    cout << "Memory Util: " << memUsagePercentage << "%\n\n";
+    cout << "Running processes and memory usage:\n";
+    cout << "---------------------------------------------------------\n";
+
+    //processes with allocated memory
+    for (const auto& process : processes) {
+        if (process.in_mem == true && process.status != "Finished") {
+            cout << process.name << "\t" << process.mem_allocated << "kb\t" << process.status <<"\n";
+        }
+    }
+    cout << "---------------------------------------------------------\n";
+}
+
+void ConsoleManager::vmstat() const
+{
+    int idleCpuTicks = 0;
+    int activeCpuTicks = 0;
+    int numPagedIn = 0;
+    int numPagedOut = 0;
+
+    // Calculate memory usage
+    int usedMemory = 0;
+    for (const auto& process : processes) {
+        if (process.in_mem == true && process.status != "Finished") {
+            usedMemory += process.mem_allocated;
+        }
+    }
+    int freeMemory = max_overall_mem - usedMemory;
+
+    // Calculate CPU ticks
+    int totalTicks = idleCpuTicks + activeCpuTicks;
+
+    // Print VM statistics
+    system("cls");
+    header();
+    cout << "---------------------------------------------------------\n";
+    cout << "vmstat 1.0\n";
+    cout << "---------------------------------------------------------\n";
+    cout << "Total memory:\t\t" << max_overall_mem << " KB\n";
+    cout << "Used memory:\t\t" << usedMemory << " KB\n";
+    cout << "Free memory:\t\t" << freeMemory << " KB\n\n";
+
+    cout << "CPU Stats:\n";
+    cout << "Idle CPU ticks:\t\t" << idleCpuTicks << "\n";
+    cout << "Active CPU ticks:\t" << activeCpuTicks << "\n";
+    cout << "Total CPU ticks:\t" << totalTicks << "\n\n";
+
+    cout << "Paging Stats:\n";
+    cout << "Pages paged in:\t\t" << numPagedIn << "\n";
+    cout << "Pages paged out:\t" << numPagedOut << "\n";
+    cout << "---------------------------------------------------------\n";
+}

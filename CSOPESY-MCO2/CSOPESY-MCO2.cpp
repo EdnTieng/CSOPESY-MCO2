@@ -140,6 +140,14 @@ int main() {
                     system("cls");
                     header();
                 }
+                else if (user_input == "process-smi")
+                {
+                    consoleManager.process_smi();
+                }
+                else if (user_input == "vmstat")
+                {
+                    consoleManager.vmstat();
+                }
                 else if (user_input == "exit") {
                     initialized = false;
 

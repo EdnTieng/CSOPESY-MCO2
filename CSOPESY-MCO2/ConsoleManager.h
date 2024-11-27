@@ -41,6 +41,12 @@ public:
     //memory stamp
     void printMemoryStamp(int qq, int maxOverallMem, int currentMemoryUsage) const;
 
+    //process-smi
+    void process_smi() const;
+
+    //vmstat
+    void vmstat() const;
+
 private:
     std::vector<ProcessInfo> processes; // Vector to store all processes
 };

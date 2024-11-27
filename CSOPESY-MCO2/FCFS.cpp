@@ -184,7 +184,7 @@ void FCFS_Scheduler::cpuWorker(int coreId) {
                 process->current_ins++;
                 
                 // Log memory status after each instruction execution
-                consoleManager->printMemoryStamp(qq, max_overall_mem, currentMemoryUsage);
+                //consoleManager->printMemoryStamp(qq, max_overall_mem, currentMemoryUsage);
 
                 if (process->dummy) {
                     consoleManager->updateProcessStatus("P" + std::to_string(process->id), "Running", process->current_ins, true);
