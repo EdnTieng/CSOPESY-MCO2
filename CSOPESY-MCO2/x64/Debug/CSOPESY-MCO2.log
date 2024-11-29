@@ -1,5 +1,2 @@
-﻿  ConsoleManager.cpp
-C:\Users\edn\Documents\GitHub\CSOPESY-MCO2\CSOPESY-MCO2\ConsoleManager.cpp(110,25): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\edn\Documents\GitHub\CSOPESY-MCO2\CSOPESY-MCO2\ConsoleManager.cpp(156,25): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\edn\Documents\GitHub\CSOPESY-MCO2\CSOPESY-MCO2\ConsoleManager.cpp(251,25): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+﻿  Process.cpp
   CSOPESY-MCO2.vcxproj -> C:\Users\edn\Documents\GitHub\CSOPESY-MCO2\x64\Debug\CSOPESY-MCO2.exe

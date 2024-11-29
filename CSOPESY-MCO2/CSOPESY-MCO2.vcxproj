@@ -132,12 +132,16 @@
     <ClCompile Include="CSOPESY-MCO2.cpp" />
     <ClCompile Include="FCFS.cpp" />
     <ClCompile Include="header.cpp" />
+    <ClCompile Include="MemoryManager.cpp" />
+    <ClCompile Include="Process.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Config.h" />
     <ClInclude Include="ConsoleManager.h" />
     <ClInclude Include="FCFS.h" />
     <ClInclude Include="header.h" />
+    <ClInclude Include="MemoryManager.h" />
+    <ClInclude Include="Process.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

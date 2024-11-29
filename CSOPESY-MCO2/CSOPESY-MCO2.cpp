@@ -104,14 +104,6 @@ int main() {
                     ss >> action >> name;
 
                     if (action == "-s") {
-                        auto now = chrono::system_clock::to_time_t(chrono::system_clock::now());
-                        struct tm local_time;
-                        localtime_s(&local_time, &now);
-                        ostringstream oss;
-                        oss << put_time(&local_time, "%m/%d/%Y, %I:%M:%S %p");
-                        string timestamp = oss.str();
-
-                        int random_instructions = dist(gen);
                         scheduler->addToQueue(name);
                     }
                     else if (action == "-r") {
