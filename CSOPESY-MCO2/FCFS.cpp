@@ -58,6 +58,7 @@ void FCFS_Scheduler::schedulingTestStart(bool run) {
                     int randomized_mem = dist(gen);
                     std::lock_guard<std::mutex> lock(queueMutex);
                     processQueue.push(new Process(processId++, randomized_mem));
+                    
                 }
 
                 // Notify worker threads about the new process
@@ -136,7 +137,6 @@ void FCFS_Scheduler::schedulerFunction() {
                 }
             }
         }
-
         if (!processQueue.empty()) {
             // Notify workers when there are processes
             cv.notify_all();
@@ -145,9 +145,6 @@ void FCFS_Scheduler::schedulerFunction() {
         std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Adjust timing if needed
     }
 }
-
-
-
 
 void FCFS_Scheduler::cpuWorker(int coreId) {
     std::random_device rd;
@@ -168,10 +165,14 @@ void FCFS_Scheduler::cpuWorker(int coreId) {
             if (!running && processQueue.empty()) break;
 
             if (!processQueue.empty() && coreAvailable[coreId]) {
+                
                 Process* nextProcess = processQueue.front();
 
                 int requiredBlocks = max_mem_per_proc / mem_per_frame;
-
+                if (requiredBlocks < 1)
+                {
+                    requiredBlocks = 1; //if required blocks becomes less than 1, allocated just 1 block
+                }
                 // Check if memory blocks are available
                 if (nextProcess->in_mem || memoryManager.allocateBlocks(requiredBlocks)) {
                     // Allocate memory for the process if not already in memory
