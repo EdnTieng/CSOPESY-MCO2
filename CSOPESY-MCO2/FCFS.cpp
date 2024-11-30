@@ -16,6 +16,8 @@ FCFS_Scheduler::FCFS_Scheduler(int coreCount, ConsoleManager* consoleManager)
     running(false),
     consoleManager(consoleManager),
     memoryManager(max_overall_mem, mem_per_frame) { // Initialize MemoryManager
+    coreIdleTicks.resize(coreCount, 0);   // Set all cores' idle ticks to 0
+    coreActiveTicks.resize(coreCount, 0); // Set all cores' active ticks to 0
     coreAvailable.resize(coreCount, true);
 
     // Determine the scheduling algorithm
@@ -157,6 +159,9 @@ void FCFS_Scheduler::cpuWorker(int coreId) {
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> dist(min_ins, max_ins);
 
+    int& idleTicks = coreIdleTicks[coreId];    // Reference to the core's idle tick counter
+    int& activeTicks = coreActiveTicks[coreId]; // Reference to the core's active tick counter
+
     while (true) {
         Process* process = nullptr;
 
@@ -171,29 +176,26 @@ void FCFS_Scheduler::cpuWorker(int coreId) {
             if (!running && processQueue.empty()) break;
 
             if (!processQueue.empty() && coreAvailable[coreId]) {
-                
                 Process* nextProcess = processQueue.front();
 
                 int requiredBlocks = nextProcess->mem_allocated / mem_per_frame;
-                if (requiredBlocks < 1)
-                {
-                    requiredBlocks = 1; //if required blocks becomes less than 1, allocated just 1 block
+                if (requiredBlocks < 1) {
+                    requiredBlocks = 1; // Allocate at least 1 block
                 }
+
                 // Check if memory blocks are available
                 if (nextProcess->in_mem || memoryManager.allocateBlocks(requiredBlocks, nextProcess->id)) {
-                    // Allocate memory for the process if not already in memory
                     if (!nextProcess->in_mem) {
                         nextProcess->in_mem = true;
-                        nextProcess->mem_allocated = requiredBlocks * mem_per_frame; // Set allocated memory
+                        nextProcess->mem_allocated = requiredBlocks * mem_per_frame;
                     }
 
-                    // Assign the process to the core
                     process = nextProcess;
-                    processQueue.pop();  // Remove the process from the queue
+                    processQueue.pop();
                     coreAvailable[coreId] = false;
                     coreAssignments[coreId] = process;
 
-                    // Assign random instructions if not set
+                    // Assign random instructions if not already set
                     if (process->total_ins == 0) {
                         process->total_ins = dist(gen);
                     }
@@ -215,20 +217,23 @@ void FCFS_Scheduler::cpuWorker(int coreId) {
                 }
                 else {
                     // Not enough memory; send the process back to the queue tail
-                    
                     processQueue.push(nextProcess);
                     processQueue.pop();
                 }
             }
         }
 
-        // Execute the process
         if (process) {
+            // Execute the process
             int instructions_to_execute = (algorithm == RR) ? std::min(quant_cycles, process->total_ins - process->current_ins) : process->total_ins;
 
             for (int i = 0; i < instructions_to_execute; ++i) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(delay_per_exec + 1* 10));
+                std::this_thread::sleep_for(std::chrono::milliseconds(delay_per_exec+1 * 10));
                 process->current_ins++;
+                {
+                    std::lock_guard<std::mutex> lock(statsMutex);
+                    coreActiveTicks[coreId]++; // Increment active ticks
+                }
 
                 if (process->dummy) {
                     consoleManager->updateProcessStatus("P" + std::to_string(process->id), "Running", process->current_ins, true);
@@ -238,10 +243,10 @@ void FCFS_Scheduler::cpuWorker(int coreId) {
                 }
             }
 
+            // Post-execution handling
             {
                 std::lock_guard<std::mutex> lock(queueMutex);
 
-                // If process is finished, deallocate memory and remove process
                 if (process->current_ins >= process->total_ins) {
                     if (process->dummy) {
                         consoleManager->updateProcessStatus("P" + std::to_string(process->id), "Finished", process->total_ins, false);
@@ -250,16 +255,12 @@ void FCFS_Scheduler::cpuWorker(int coreId) {
                         consoleManager->updateProcessStatus(process->name, "Finished", process->total_ins, false);
                     }
 
-                    // Deallocate memory blocks
                     memoryManager.releaseBlocks(process->id);
-
                     delete process;
                     coreAvailable[coreId] = true;
                     coreAssignments.erase(coreId);
                 }
-                else if (memoryManager.getUsedBlocks() >= memoryManager.getTotalBlocks() && !processQueue.empty())
-                {
-                    //executes if the the memory is full and the process queue is not empty
+                else if (memoryManager.getUsedBlocks() >= memoryManager.getTotalBlocks() && !processQueue.empty()) {
                     if (process->dummy) {
                         consoleManager->updateProcessStatus("P" + std::to_string(process->id), "Waiting", process->current_ins, false);
                         memoryManager.writeProcessToStore(process);
@@ -269,17 +270,14 @@ void FCFS_Scheduler::cpuWorker(int coreId) {
                         processQueue.push(process);
                         coreAvailable[coreId] = true;
                         coreAssignments.erase(coreId);
-                        cv.notify_all(); // Notify other threads
+                        cv.notify_all();
                     }
 
-                    // Deallocate memory blocks
                     memoryManager.releaseBlocks(process->id);
-
                     coreAvailable[coreId] = true;
                     coreAssignments.erase(coreId);
                 }
                 else if (algorithm == RR) {
-                    // Round Robin: Re-queue the process if not finished
                     if (process->dummy) {
                         consoleManager->updateProcessStatus("P" + std::to_string(process->id), "Waiting", process->current_ins, true);
                     }
@@ -290,12 +288,21 @@ void FCFS_Scheduler::cpuWorker(int coreId) {
                     processQueue.push(process);
                     coreAvailable[coreId] = true;
                     coreAssignments.erase(coreId);
-                    cv.notify_all(); // Notify other threads
+                    cv.notify_all();
                 }
             }
         }
+        else {
+            // Increment idle ticks if no process was executed
+            {
+                std::lock_guard<std::mutex> lock(statsMutex);
+                coreIdleTicks[coreId]++; // Increment idle ticks
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(10)); // Simulate idle wait
+        }
     }
 }
+
 
 
 void FCFS_Scheduler::addToQueue(string name) {
@@ -311,23 +318,23 @@ void FCFS_Scheduler::addToQueue(string name) {
     cv.notify_all();
 }
 
-void FCFS_Scheduler::vmstat() const {
+void FCFS_Scheduler::vmstat() {
     // Fetch memory stats
     int totalMemory = memoryManager.getTotalBlocks() * mem_per_frame;
     int usedMemory = memoryManager.getUsedBlocks() * mem_per_frame;
     int freeMemory = totalMemory - usedMemory;
 
     // Fetch CPU stats
+    std::lock_guard<std::mutex> lock(statsMutex); // Ensure thread safety
+
     int idleCpuTicks = 0;
     int activeCpuTicks = 0;
-    for (const auto& core : coreAssignments) {
-        if (core.second == nullptr) {
-            idleCpuTicks++;
-        }
-        else {
-            activeCpuTicks++;
-        }
+
+    for (int i = 0; i < coreCount; ++i) {
+        idleCpuTicks += coreIdleTicks[i];
+        activeCpuTicks += coreActiveTicks[i];
     }
+
     int totalTicks = idleCpuTicks + activeCpuTicks;
 
     // Fetch paging stats

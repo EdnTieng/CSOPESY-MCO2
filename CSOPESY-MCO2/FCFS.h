@@ -32,7 +32,7 @@ public:
     void schedulingTestStart(bool run);
     void stop();
     void addToQueue(string name);
-    void vmstat() const;
+    void vmstat();
 
 private:
     int coreCount;
@@ -56,7 +56,9 @@ private:
     void schedulerFunction();
     void cpuWorker(int coreId);
     
-
+    mutex statsMutex; // Protects tick data
+    vector<int> coreIdleTicks;   // Tracks idle ticks for each core
+    vector<int> coreActiveTicks; // Tracks active ticks for each core
 };
 
 #endif // FCFS_H
