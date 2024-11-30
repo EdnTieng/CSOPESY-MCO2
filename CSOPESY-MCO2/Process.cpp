@@ -10,4 +10,4 @@ Process::Process(const std::string& name, int mem_aloc)
     : name(name), mem_allocated(mem_aloc), dummy(false), in_mem(false) {}
 
 Process::Process(int id, std::string name, int currentIns, int totalIns, int memAllocated)
-    : id(id), name(name), current_ins(currentIns), total_ins(totalIns), mem_allocated(memAllocated), in_mem(false){}
+    : id(id), name(name), current_ins(currentIns), total_ins(totalIns), mem_allocated(memAllocated), in_mem(false), dummy(true) {}

@@ -118,6 +118,7 @@ void FCFS_Scheduler::schedulerFunction() {
         if (memoryManager.getUsedBlocks() < memoryManager.getTotalBlocks() && !memoryManager.isBackingStoreEmpty()) {
             // Retrieve the next process ID from the backing store
             int nextProcessId = memoryManager.peekNextProcessIdFromStore();  // Get the next process ID from the backing store
+
             if (nextProcessId != -1) {  // If a valid ID is returned, proceed
 
                 // Check if memory is available to load this new process
@@ -135,6 +136,10 @@ void FCFS_Scheduler::schedulerFunction() {
                     processQueue.push(process);
                     memoryManager.removeProcessFromStore(nextProcessId);  // Remove the process after enqueueing
                 }
+                if (!process) {
+                    std::cout << "Failed to read process with ID: " << nextProcessId << "\n";
+                }
+
             }
         }
         if (!processQueue.empty()) {
@@ -168,13 +173,13 @@ void FCFS_Scheduler::cpuWorker(int coreId) {
                 
                 Process* nextProcess = processQueue.front();
 
-                int requiredBlocks = max_mem_per_proc / mem_per_frame;
+                int requiredBlocks = nextProcess->mem_allocated / mem_per_frame;
                 if (requiredBlocks < 1)
                 {
                     requiredBlocks = 1; //if required blocks becomes less than 1, allocated just 1 block
                 }
                 // Check if memory blocks are available
-                if (nextProcess->in_mem || memoryManager.allocateBlocks(requiredBlocks)) {
+                if (nextProcess->in_mem || memoryManager.allocateBlocks(requiredBlocks, nextProcess->id)) {
                     // Allocate memory for the process if not already in memory
                     if (!nextProcess->in_mem) {
                         nextProcess->in_mem = true;
@@ -245,7 +250,7 @@ void FCFS_Scheduler::cpuWorker(int coreId) {
                     }
 
                     // Deallocate memory blocks
-                    memoryManager.releaseBlocks(process->mem_allocated / mem_per_frame);
+                    memoryManager.releaseBlocks(process->id);
 
                     delete process;
                     coreAvailable[coreId] = true;
@@ -267,7 +272,7 @@ void FCFS_Scheduler::cpuWorker(int coreId) {
                     }
 
                     // Deallocate memory blocks
-                    memoryManager.releaseBlocks(process->mem_allocated / mem_per_frame);
+                    memoryManager.releaseBlocks(process->id);
 
                     coreAvailable[coreId] = true;
                     coreAssignments.erase(coreId);

@@ -47,8 +47,14 @@ public:
     //vmstat
     void vmstat() const;
 
+    int getPageOuts(int pageOutsFromMem) const;
+
+    int getPageIns(int pageInsFromMem) const;
+    int pageIns;
+    int pageOuts;
 private:
     std::vector<ProcessInfo> processes; // Vector to store all processes
+
 };
 
 #endif // CONSOLE_MANAGER_H

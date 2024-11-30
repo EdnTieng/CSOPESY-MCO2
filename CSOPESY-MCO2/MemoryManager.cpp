@@ -1,46 +1,86 @@
 #include "MemoryManager.h"
 #include <iostream>
+
 MemoryManager::MemoryManager(int maxOverallMem, int memPerFrame)
-    : blocksUsed(0), memPerFrame(memPerFrame) {
+    : blocksUsed(0), memPerFrame(memPerFrame), pageIns(0), pageOuts(0) {
     totalBlocks = maxOverallMem / memPerFrame;
     memoryBlocks.resize(totalBlocks, false); // All blocks are initially free
 }
 
-bool MemoryManager::allocateBlocks(int requiredBlocks) {
-    int contiguousFreeBlocks = 0;
+bool MemoryManager::allocateBlocks(int requiredBlocks, int processId) {
+    if (isPagingMode()) {
+        int allocatedBlocks = 0;
+        std::vector<int> allocatedPages;
 
-    // Find a range of contiguous free blocks
-    for (int i = 0; i < totalBlocks; ++i) {
-        if (!memoryBlocks[i]) {
-            contiguousFreeBlocks++;
-            if (contiguousFreeBlocks == requiredBlocks) {
-                // Allocate the blocks
-                for (int j = i - requiredBlocks + 1; j <= i; ++j) {
-                    memoryBlocks[j] = true;
+        // Find and allocate individual frames (non-contiguous allowed)
+        for (int i = 0; i < totalBlocks; ++i) {
+            if (!memoryBlocks[i]) { // Free frame
+                memoryBlocks[i] = true;
+                allocatedPages.push_back(i);
+                allocatedBlocks++;
+
+                if (allocatedBlocks == requiredBlocks) {
+                    processPageMap[processId] = allocatedPages; // Record page allocations
+                    blocksUsed += requiredBlocks;
+                    return true;
                 }
-                blocksUsed += requiredBlocks;
-                return true; // Allocation successful
             }
         }
-        else {
-            contiguousFreeBlocks = 0; // Reset counter if a block is occupied
+
+        // Rollback in case of partial allocation
+        for (int page : allocatedPages) {
+            memoryBlocks[page] = false;
         }
+        return false; // Not enough free frames
     }
-    return false; // Not enough contiguous blocks available
+    else {
+        // Flat memory allocation logic
+        int contiguousFreeBlocks = 0;
+        for (int i = 0; i < totalBlocks; ++i) {
+            if (!memoryBlocks[i]) {
+                contiguousFreeBlocks++;
+                if (contiguousFreeBlocks == requiredBlocks) {
+                    for (int j = i - requiredBlocks + 1; j <= i; ++j) {
+                        memoryBlocks[j] = true;
+                    }
+                    blocksUsed += requiredBlocks;
+                    return true;
+                }
+            }
+            else {
+                contiguousFreeBlocks = 0; // Reset counter
+            }
+        }
+        return false; // Not enough contiguous blocks
+    }
 }
 
-void MemoryManager::releaseBlocks(int requiredBlocks) {
-    int releasedBlocks = 0;
 
-    // Free up `requiredBlocks` blocks (iterate through the map)
-    for (int i = 0; i < totalBlocks && releasedBlocks < requiredBlocks; ++i) {
-        if (memoryBlocks[i]) {
-            memoryBlocks[i] = false; // Mark block as free
-            releasedBlocks++;
+void MemoryManager::releaseBlocks(int processId) {
+    if (isPagingMode()) {
+        // Release pages allocated to the process
+        auto it = processPageMap.find(processId);
+        if (it != processPageMap.end()) {
+            for (int pageIndex : it->second) {
+                memoryBlocks[pageIndex] = false; // Mark frame as free
+            }
+            blocksUsed -= it->second.size(); // Update used blocks
+            processPageMap.erase(it);        // Remove from the map
         }
     }
-    blocksUsed -= releasedBlocks;
+    else {
+        // Flat memory logic
+        int releasedBlocks = 0;
+        for (int i = 0; i < totalBlocks && releasedBlocks < blocksUsed; ++i) {
+            if (memoryBlocks[i]) {
+                memoryBlocks[i] = false;
+                releasedBlocks++;
+            }
+        }
+        blocksUsed -= releasedBlocks;
+    }
 }
+
 
 int MemoryManager::getUsedBlocks() const {
     return blocksUsed;
@@ -54,16 +94,21 @@ void MemoryManager::writeProcessToStore(const Process* process) {
     std::ofstream outFile(backingStoreFilePath, std::ios::app);
     if (!outFile.is_open()) {
         throw std::runtime_error("Unable to open backing store file.");
-        
     }
+
     outFile << process->id << ","
         << process->name << ","
         << process->current_ins << ","
         << process->total_ins << ","
-        << process->mem_allocated << "\n";
+        << process->mem_allocated;
+
+    
+    outFile << "\n";
 
     outFile.close();
+    pageOuts++;
 }
+
 
 Process* MemoryManager::readProcessFromStore(int processId) {
     std::ifstream inFile(backingStoreFilePath);
@@ -94,7 +139,8 @@ Process* MemoryManager::readProcessFromStore(int processId) {
             }
         }
     }
-
+    pageIns++;
+    cout << pageIns;
     inFile.close();
     return nullptr; // Process not found
 }
@@ -134,6 +180,7 @@ bool MemoryManager::isBackingStoreEmpty() const {
 
 int MemoryManager::peekNextProcessIdFromStore() {
     ifstream file("backing_store.txt");
+    
     if (file.is_open()) {
         int id;
         string name;
@@ -144,4 +191,16 @@ int MemoryManager::peekNextProcessIdFromStore() {
         }
     }
     return -1; // Return -1 if no process is found
+}
+
+bool MemoryManager::isPagingMode() const {
+    return max_overall_mem > mem_per_frame;
+}
+
+int MemoryManager::getPageIns() const {
+    return pageIns;
+}
+
+int MemoryManager::getPageOuts() const {
+    return pageOuts;
 }

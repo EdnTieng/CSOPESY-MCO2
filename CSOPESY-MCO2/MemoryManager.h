@@ -5,6 +5,8 @@
 #include <fstream>
 #include <sstream>
 #include "Process.h"
+#include "Config.h"
+#include <unordered_map>
 
 using namespace std;
 class MemoryManager {
@@ -14,14 +16,18 @@ private:
     std::vector<bool> memoryBlocks;    // Block availability (true = used, false = free)
     int memPerFrame;                   // Memory per frame
 
+    int pageIns;  // Tracks the number of page-ins
+    int pageOuts; // Tracks the number of page-outs
+
     std::string backingStoreFilePath = "backing_store.txt"; // Path to the backing store file
+    std::unordered_map<int, std::vector<int>> processPageMap; // Process ID -> Vector of page indices
 
 public:
     // Constructor
     MemoryManager(int maxOverallMem, int memPerFrame);
 
     // Allocate a specified number of blocks
-    bool allocateBlocks(int requiredBlocks);
+    bool allocateBlocks(int requiredBlocks, int processId);
 
     // Release a specified number of blocks
     void releaseBlocks(int requiredBlocks);
@@ -45,6 +51,12 @@ public:
     bool isBackingStoreEmpty() const;
 
     int peekNextProcessIdFromStore();
+
+    bool isPagingMode() const;
+
+    int getPageIns() const;  // Getter for page-ins
+
+    int getPageOuts() const; // Getter for page-outs
 };
 
 #endif // MEMORY_MANAGER_H
