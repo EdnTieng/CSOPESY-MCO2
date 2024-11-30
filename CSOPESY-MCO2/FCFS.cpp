@@ -228,7 +228,7 @@ void FCFS_Scheduler::cpuWorker(int coreId) {
             int instructions_to_execute = (algorithm == RR) ? std::min(quant_cycles, process->total_ins - process->current_ins) : process->total_ins;
 
             for (int i = 0; i < instructions_to_execute; ++i) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(delay_per_exec+1 * 10));
+                std::this_thread::sleep_for(std::chrono::milliseconds(delay_per_exec +1 * 10));
                 process->current_ins++;
                 {
                     std::lock_guard<std::mutex> lock(statsMutex);
@@ -273,9 +273,11 @@ void FCFS_Scheduler::cpuWorker(int coreId) {
                         cv.notify_all();
                     }
 
+                    memoryManager.incrementPages();
                     memoryManager.releaseBlocks(process->id);
                     coreAvailable[coreId] = true;
                     coreAssignments.erase(coreId);
+                    
                 }
                 else if (algorithm == RR) {
                     if (process->dummy) {
@@ -284,7 +286,7 @@ void FCFS_Scheduler::cpuWorker(int coreId) {
                     else {
                         consoleManager->updateProcessStatus(process->name, "Waiting", process->current_ins, true);
                     }
-
+                    memoryManager.incrementPages();
                     processQueue.push(process);
                     coreAvailable[coreId] = true;
                     coreAssignments.erase(coreId);
@@ -298,7 +300,7 @@ void FCFS_Scheduler::cpuWorker(int coreId) {
                 std::lock_guard<std::mutex> lock(statsMutex);
                 coreIdleTicks[coreId]++; // Increment idle ticks
             }
-            std::this_thread::sleep_for(std::chrono::milliseconds(10)); // Simulate idle wait
+            
         }
     }
 }

@@ -57,6 +57,8 @@ public:
     int getPageIns() const;  // Getter for page-ins
 
     int getPageOuts() const; // Getter for page-outs
+
+    void incrementPages();
 };
 
 #endif // MEMORY_MANAGER_H

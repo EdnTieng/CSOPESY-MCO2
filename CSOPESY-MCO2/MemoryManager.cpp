@@ -191,7 +191,11 @@ int MemoryManager::peekNextProcessIdFromStore() {
     }
     return -1; // Return -1 if no process is found
 }
-
+void MemoryManager::incrementPages()
+{
+    pageIns++;
+    pageOuts++;
+}
 bool MemoryManager::isPagingMode() const {
     return max_overall_mem > mem_per_frame;
 }
