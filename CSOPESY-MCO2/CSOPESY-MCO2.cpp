@@ -138,7 +138,7 @@ int main() {
                 }
                 else if (user_input == "vmstat")
                 {
-                    consoleManager.vmstat();
+                    scheduler->vmstat();
                 }
                 else if (user_input == "exit") {
                     initialized = false;

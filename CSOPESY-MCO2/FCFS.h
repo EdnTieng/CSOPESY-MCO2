@@ -32,6 +32,7 @@ public:
     void schedulingTestStart(bool run);
     void stop();
     void addToQueue(string name);
+    void vmstat() const;
 
 private:
     int coreCount;
@@ -54,6 +55,8 @@ private:
 
     void schedulerFunction();
     void cpuWorker(int coreId);
+    
+
 };
 
 #endif // FCFS_H

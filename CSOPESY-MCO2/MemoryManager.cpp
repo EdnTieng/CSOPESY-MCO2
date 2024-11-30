@@ -135,12 +135,11 @@ Process* MemoryManager::readProcessFromStore(int processId) {
             // If the process ID matches, reconstruct the process
             if (id == processId) {
                 inFile.close();
+                pageIns++;
                 return new Process(id, name, currentIns, totalIns, memAllocated);
             }
         }
     }
-    pageIns++;
-    cout << pageIns;
     inFile.close();
     return nullptr; // Process not found
 }

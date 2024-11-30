@@ -1,4 +1,5 @@
 #include "FCFS.h"
+#include "header.h"
 #include "Process.h"
 #include "Config.h"
 #include <iomanip>
@@ -65,7 +66,7 @@ void FCFS_Scheduler::schedulingTestStart(bool run) {
                 cv.notify_all();
 
                 // Delay between process creations, adjust as needed
-                std::this_thread::sleep_for(std::chrono::milliseconds(batch_process_freq * 10));
+                std::this_thread::sleep_for(std::chrono::milliseconds(batch_process_freq +1 * 10));
             }
             });
     }
@@ -226,7 +227,7 @@ void FCFS_Scheduler::cpuWorker(int coreId) {
             int instructions_to_execute = (algorithm == RR) ? std::min(quant_cycles, process->total_ins - process->current_ins) : process->total_ins;
 
             for (int i = 0; i < instructions_to_execute; ++i) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(delay_per_exec * 10));
+                std::this_thread::sleep_for(std::chrono::milliseconds(delay_per_exec + 1* 10));
                 process->current_ins++;
 
                 if (process->dummy) {
@@ -308,5 +309,49 @@ void FCFS_Scheduler::addToQueue(string name) {
         processQueue.push(new Process(name, randomized_mem));
     }
     cv.notify_all();
+}
+
+void FCFS_Scheduler::vmstat() const {
+    // Fetch memory stats
+    int totalMemory = memoryManager.getTotalBlocks() * mem_per_frame;
+    int usedMemory = memoryManager.getUsedBlocks() * mem_per_frame;
+    int freeMemory = totalMemory - usedMemory;
+
+    // Fetch CPU stats
+    int idleCpuTicks = 0;
+    int activeCpuTicks = 0;
+    for (const auto& core : coreAssignments) {
+        if (core.second == nullptr) {
+            idleCpuTicks++;
+        }
+        else {
+            activeCpuTicks++;
+        }
+    }
+    int totalTicks = idleCpuTicks + activeCpuTicks;
+
+    // Fetch paging stats
+    int numPagedIn = memoryManager.getPageIns();
+    int numPagedOut = memoryManager.getPageOuts();
+
+    // Print VM statistics
+    system("cls");
+    header(); // Custom header function if defined
+    std::cout << "---------------------------------------------------------\n";
+    std::cout << "vmstat 1.0\n";
+    std::cout << "---------------------------------------------------------\n";
+    std::cout << "Total memory:\t\t" << totalMemory << " KB\n";
+    std::cout << "Used memory:\t\t" << usedMemory << " KB\n";
+    std::cout << "Free memory:\t\t" << freeMemory << " KB\n\n";
+
+    std::cout << "CPU Stats:\n";
+    std::cout << "Idle CPU ticks:\t\t" << idleCpuTicks << "\n";
+    std::cout << "Active CPU ticks:\t" << activeCpuTicks << "\n";
+    std::cout << "Total CPU ticks:\t" << totalTicks << "\n\n";
+
+    std::cout << "Paging Stats:\n";
+    std::cout << "Pages paged in:\t\t" << numPagedIn << "\n";
+    std::cout << "Pages paged out:\t" << numPagedOut << "\n";
+    std::cout << "---------------------------------------------------------\n";
 }
 
